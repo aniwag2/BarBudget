@@ -1,0 +1,27 @@
+# dependencies
+/node_modules
+
+# next.js
+/.next/
+/out/
+next-env.d.ts
+
+# production
+/build
+
+# env — never commit secrets
+.env
+.env*.local
+
+# prisma
+# (keep migrations; ignore local generated client if outside node_modules)
+
+# docker / backups
+/backups/*.sql
+/backups/*.sql.gz
+
+# misc
+.DS_Store
+*.pem
+*.log
+npm-debug.log*

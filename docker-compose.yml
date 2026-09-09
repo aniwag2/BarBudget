@@ -1,0 +1,51 @@
+# BarBudget — self-hosted stack. Two services only: app + db.
+# Exposure to the internet is handled entirely by the host's existing
+# cloudflared process (Cloudflare Tunnel), which points a public hostname at
+# http://localhost:3000. This stack only publishes the app on 127.0.0.1:3000.
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # Ensure the app talks to the db container over the internal network.
+      DATABASE_URL: ${DATABASE_URL}
+    # Bind ONLY to loopback: reachable by the host's cloudflared, not the LAN/internet.
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      # busybox wget ships in the node:alpine runtime image.
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  db:
+    build:
+      context: ./db
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    # No `ports:` — only the app talks to the db, over the internal Docker network.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+volumes:
+  pgdata:

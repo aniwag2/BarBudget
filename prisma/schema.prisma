@@ -1,0 +1,159 @@
+// BarBudget data model.
+// Postgres, applied via `prisma migrate`. Extensions (pg_cron, pg_trgm, pg_net)
+// are enabled by db/init SQL, not by Prisma.
+
+generator client {
+  provider = "prisma-client-js"
+  // "native" covers local dev; the musl target is for the Alpine runtime image
+  // so the correct engine is bundled at build time (no runtime download).
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // Extensions (pg_trgm, pg_cron, pg_net) are created by db/init SQL, not managed
+  // by Prisma, so the postgresqlExtensions preview flag isn't needed here.
+}
+
+enum CategoryType {
+  base_spirit
+  essential_liqueur
+  supplemental
+  mixer
+  tool
+}
+
+enum BudgetTier {
+  budget
+  mid
+  premium
+}
+
+enum PriceSource {
+  feed
+  manual
+}
+
+model Category {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  type        CategoryType
+  description String?
+  bottles     Bottle[]
+
+  @@map("categories")
+}
+
+model Bottle {
+  id                       Int         @id @default(autoincrement())
+  category                 Category    @relation(fields: [categoryId], references: [id])
+  categoryId               Int         @map("category_id")
+  name                     String
+  brand                    String?
+  abv                      Decimal?    @db.Decimal(5, 2)
+  sizeMl                   Int?        @map("size_ml")
+  // Matching ingredient string in TheCocktailDB, used to bridge cocktail
+  // ingredient chips <-> catalog bottles. Nullable.
+  cocktaildbIngredientName String?     @map("cocktaildb_ingredient_name")
+  expertScore              Decimal?    @map("expert_score") @db.Decimal(3, 1) // 0.0-10.0
+  expertSummary            String?     @map("expert_summary") // original writing only
+  // jsonb array of { label, url } — attribution only, never scraped review text.
+  sourceLinks              Json?       @map("source_links")
+  priceLow                 Decimal?    @map("price_low") @db.Decimal(10, 2)
+  priceHigh                Decimal?    @map("price_high") @db.Decimal(10, 2)
+  priceSource              PriceSource @default(manual) @map("price_source")
+  priceUpdatedAt           DateTime?   @map("price_updated_at")
+  budgetTier               BudgetTier  @default(mid) @map("budget_tier")
+  trending                 Boolean     @default(false)
+  imageUrl                 String?     @map("image_url")
+  createdAt                DateTime    @default(now()) @map("created_at")
+  updatedAt                DateTime    @updatedAt @map("updated_at")
+
+  affiliateLinks   AffiliateLink[]
+  ratings          Rating[]
+  priceFeedItems   PriceFeedItem[]
+
+  @@index([categoryId])
+  @@index([budgetTier])
+  @@index([trending])
+  @@index([cocktaildbIngredientName])
+  @@map("bottles")
+}
+
+model AffiliateLink {
+  id               Int     @id @default(autoincrement())
+  bottle           Bottle  @relation(fields: [bottleId], references: [id], onDelete: Cascade)
+  bottleId         Int     @map("bottle_id")
+  retailerName     String  @map("retailer_name")
+  affiliateNetwork String? @map("affiliate_network") // flexoffers | rakuten | skimlinks | ...
+  url              String
+  trackingId       String? @map("tracking_id")
+  isAffiliate      Boolean @default(true) @map("is_affiliate")
+
+  @@index([bottleId])
+  @@map("affiliate_links")
+}
+
+// Staging table for ingested affiliate feeds.
+model PriceFeedItem {
+  id              Int      @id @default(autoincrement())
+  retailerName    String   @map("retailer_name")
+  feedProductName String   @map("feed_product_name")
+  price           Decimal  @db.Decimal(10, 2)
+  productUrl      String   @map("product_url")
+  fetchedAt       DateTime @default(now()) @map("fetched_at")
+  matchedBottle   Bottle?  @relation(fields: [matchedBottleId], references: [id], onDelete: SetNull)
+  matchedBottleId Int?     @map("matched_bottle_id")
+  // Trigram similarity score recorded at match time, for admin review sorting.
+  matchScore      Decimal? @map("match_score") @db.Decimal(4, 3)
+
+  @@index([matchedBottleId])
+  @@index([fetchedAt])
+  @@map("price_feed_items")
+}
+
+// Synced periodically from TheCocktailDB's ingredient list.
+model IngredientCache {
+  ingredientName String   @id @map("ingredient_name")
+  isAlcoholic    Boolean  @default(false) @map("is_alcoholic")
+  type           String?
+  abv            Decimal? @db.Decimal(5, 2)
+  lastSyncedAt   DateTime @default(now()) @map("last_synced_at")
+
+  @@map("ingredient_cache")
+}
+
+model Rating {
+  id        Int      @id @default(autoincrement())
+  bottle    Bottle   @relation(fields: [bottleId], references: [id], onDelete: Cascade)
+  bottleId  Int      @map("bottle_id")
+  score     Decimal  @db.Decimal(3, 1) // 0.0-10.0
+  createdAt DateTime @default(now()) @map("created_at")
+  sessionId String   @map("session_id") // anonymous browser id, for repeat-vote rate limiting
+
+  // One vote per browser per bottle.
+  @@unique([bottleId, sessionId])
+  @@index([bottleId])
+  @@map("ratings")
+}
+
+// Server-side cache of TheCocktailDB search/filter responses so public traffic
+// doesn't burn the API key's quota.
+model CocktailApiCache {
+  cacheKey  String   @id @map("cache_key")
+  payload   Json
+  fetchedAt DateTime @default(now()) @map("fetched_at")
+
+  @@index([fetchedAt])
+  @@map("cocktail_api_cache")
+}
+
+model AdminUser {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("admin_users")
+}

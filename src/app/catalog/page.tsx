@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import BottleCard from '@/components/BottleCard';
-import AdSlot from '@/components/AdSlot';
 import { listBottles, listCategories, type BottleFilters } from '@/lib/bottles';
 import { CATEGORY_TYPE_LABEL } from '@/lib/format';
 
@@ -86,23 +85,24 @@ export default async function CatalogPage({ searchParams }: { searchParams: Sear
             <p className="text-amber-500 dark:text-amber-400">No bottles match these filters.</p>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
-              {bottles.map((b, i) => (
-                <div key={b.id} className="contents">
-                  <BottleCard bottle={b} />
-                  {/* In-feed ad after the 4th card */}
-                  {i === 3 ? (
-                    <div className="sm:col-span-2">
-                      <AdSlot slotId={process.env.NEXT_PUBLIC_ADSENSE_SLOT_INFEED} label="in-feed" />
-                    </div>
-                  ) : null}
-                </div>
+              {bottles.map((b) => (
+                <BottleCard key={b.id} bottle={b} />
               ))}
             </div>
           )}
         </div>
 
         <aside className="space-y-4">
-          <AdSlot slotId={process.env.NEXT_PUBLIC_ADSENSE_SLOT_SIDEBAR} label="sidebar" className="min-h-[250px]" />
+          <div className="card p-4">
+            <h3 className="font-display text-lg font-semibold text-amber-900 dark:text-amber-100">
+              New to this?
+            </h3>
+            <p className="mt-1 text-sm text-amber-700 dark:text-amber-200">
+              Our guides explain which bottles matter most and where spending more actually improves
+              the drink.
+            </p>
+            <Link href="/guides" className="btn-ghost mt-3 text-sm">Read the guides</Link>
+          </div>
         </aside>
       </div>
     </div>

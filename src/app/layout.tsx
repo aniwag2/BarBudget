@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import './globals.css';
 import Providers from '@/components/Providers';
 import AgeGate from '@/components/AgeGate';
@@ -43,11 +44,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Nav />
           <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
           <footer className="border-t border-amber-200 bg-white dark:border-amber-800 dark:bg-amber-900">
-            <div className="mx-auto max-w-6xl px-4 py-6 text-xs text-amber-500 dark:text-amber-400">
-              <p>
+            <div className="mx-auto max-w-6xl px-4 py-6">
+              <nav className="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-sm font-medium text-amber-700 dark:text-amber-200">
+                <Link href="/" className="hover:underline">Build my bar</Link>
+                <Link href="/catalog" className="hover:underline">Catalog</Link>
+                <Link href="/cocktails" className="hover:underline">Cocktails</Link>
+                <Link href="/guides" className="hover:underline">Guides</Link>
+                <Link href="/about" className="hover:underline">About &amp; disclosures</Link>
+              </nav>
+              <p className="text-xs text-amber-500 dark:text-amber-400">
                 BarBudget provides information and price comparisons only. We do not sell alcohol;
                 all purchases happen on the retailer&rsquo;s own site. Some links are affiliate
-                links. Please drink responsibly. You must be of legal drinking age to use this site.
+                links and we may earn a commission at no cost to you. Please drink responsibly. You
+                must be of legal drinking age to use this site.
               </p>
             </div>
           </footer>

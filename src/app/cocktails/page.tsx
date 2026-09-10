@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import CocktailSearchBox from '@/components/CocktailSearchBox';
-import AdSlot from '@/components/AdSlot';
 import { searchCocktailsByName, filterByIngredients, type CocktailSummary } from '@/lib/cocktaildb';
 
 export const dynamic = 'force-dynamic';
@@ -80,7 +79,18 @@ export default async function CocktailsPage({ searchParams }: { searchParams: Se
       </div>
 
       <aside className="space-y-4">
-        <AdSlot slotId={process.env.NEXT_PUBLIC_ADSENSE_SLOT_SIDEBAR} label="sidebar" className="min-h-[250px]" />
+        <div className="card p-4">
+          <h3 className="font-display text-lg font-semibold text-amber-900 dark:text-amber-100">
+            Stock the bar for these
+          </h3>
+          <p className="mt-1 text-sm text-amber-700 dark:text-amber-200">
+            Found a drink you like? Our catalog and guides help you buy the right bottle for it.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link href="/catalog" className="btn-ghost text-sm">Browse catalog</Link>
+            <Link href="/guides" className="btn-ghost text-sm">Read guides</Link>
+          </div>
+        </div>
       </aside>
     </div>
   );

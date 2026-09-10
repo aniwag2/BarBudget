@@ -4,7 +4,6 @@ import { notFound } from 'next/navigation';
 import { getCocktailById } from '@/lib/cocktaildb';
 import { prisma } from '@/lib/prisma';
 import IngredientChips, { type ChipIngredient } from '@/components/IngredientChips';
-import AdSlot from '@/components/AdSlot';
 
 export const dynamic = 'force-dynamic';
 
@@ -76,7 +75,15 @@ export default async function CocktailDetailPage({ params }: { params: { id: str
       </div>
 
       <aside className="space-y-4">
-        <AdSlot slotId={process.env.NEXT_PUBLIC_ADSENSE_SLOT_SIDEBAR} label="sidebar" className="min-h-[250px]" />
+        <div className="card p-4">
+          <h3 className="font-display text-lg font-semibold text-amber-900 dark:text-amber-100">
+            Have the bottles?
+          </h3>
+          <p className="mt-1 text-sm text-amber-700 dark:text-amber-200">
+            Tap a highlighted ingredient to see every bottle in our catalog that works for it.
+          </p>
+          <Link href="/catalog" className="btn-ghost mt-3 text-sm">Browse the catalog</Link>
+        </div>
       </aside>
     </div>
   );

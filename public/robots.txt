@@ -3,5 +3,4 @@ Allow: /
 Disallow: /admin
 Disallow: /api
 
-# Set your canonical host below (via the Cloudflare public hostname).
-# Sitemap: https://barbudget.example.com/sitemap.xml
+Sitemap: https://barbudget.org/sitemap.xml

@@ -4,7 +4,6 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import type { BottleView } from '@/lib/bottles';
 import { money, score, BUDGET_TIER_LABEL } from '@/lib/format';
-import AdSlot from './AdSlot';
 
 type Category = { id: number; name: string; type: string };
 
@@ -123,10 +122,6 @@ export default function CalculatorClient({
         {plan.supplemental.length > 0 ? (
           <PlanSection title="Add these if budget allows" items={plan.supplemental} />
         ) : null}
-
-        <div className="mt-4">
-          <AdSlot slotId={process.env.NEXT_PUBLIC_ADSENSE_SLOT_CALCULATOR} label="calculator results" />
-        </div>
       </div>
 
       {/* Running total */}

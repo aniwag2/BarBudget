@@ -3,7 +3,10 @@
 // ingredient_cache, and the bootstrap admin user.
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { resolveDatabaseUrl } from '../scripts/db-url.mjs';
 
+// Ensure a correctly-encoded connection string before the client connects.
+process.env.DATABASE_URL = resolveDatabaseUrl();
 const prisma = new PrismaClient();
 
 const CATEGORIES = [

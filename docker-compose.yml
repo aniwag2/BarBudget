@@ -11,9 +11,9 @@ services:
     restart: unless-stopped
     env_file:
       - .env
-    environment:
-      # Ensure the app talks to the db container over the internal network.
-      DATABASE_URL: ${DATABASE_URL}
+    # DATABASE_URL is derived at container start from POSTGRES_* (see
+    # scripts/db-url.mjs + docker-entrypoint.sh), so a special character in the
+    # password can't break it. No need to set it here.
     # Bind ONLY to loopback: reachable by the host's cloudflared, not the LAN/internet.
     ports:
       - "127.0.0.1:3000:3000"

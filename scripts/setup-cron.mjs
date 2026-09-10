@@ -6,7 +6,10 @@
 //
 // Run after the stack is up:  docker compose exec app npm run cron:setup
 import { PrismaClient } from '@prisma/client';
+import { resolveDatabaseUrl } from './db-url.mjs';
 
+// Ensure a correctly-encoded connection string before the client connects.
+process.env.DATABASE_URL = resolveDatabaseUrl();
 const prisma = new PrismaClient();
 
 function dbNameFromUrl(url) {

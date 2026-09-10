@@ -8,6 +8,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      # NEXT_PUBLIC_* must be present at build time to be inlined into the client
+      # bundle. Sourced from .env (compose auto-loads it). Defaults avoid warnings.
+      args:
+        NEXT_PUBLIC_ADSENSE_CLIENT_ID: ${NEXT_PUBLIC_ADSENSE_CLIENT_ID:-}
+        NEXT_PUBLIC_ADSENSE_SLOT_INFEED: ${NEXT_PUBLIC_ADSENSE_SLOT_INFEED:-}
+        NEXT_PUBLIC_ADSENSE_SLOT_SIDEBAR: ${NEXT_PUBLIC_ADSENSE_SLOT_SIDEBAR:-}
+        NEXT_PUBLIC_ADSENSE_SLOT_CALCULATOR: ${NEXT_PUBLIC_ADSENSE_SLOT_CALCULATOR:-}
     restart: unless-stopped
     env_file:
       - .env

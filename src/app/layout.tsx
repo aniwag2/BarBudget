@@ -1,11 +1,13 @@
 import type { Metadata } from 'next';
-import Script from 'next/script';
 import './globals.css';
 import Providers from '@/components/Providers';
 import AgeGate from '@/components/AgeGate';
 import Nav from '@/components/Nav';
 
+// Baked in at build time (NEXT_PUBLIC_*), passed via Docker build arg.
 const ADSENSE_CLIENT_ID = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
+// Read at runtime (server-rendered), so no rebuild needed to change it.
+const FO_VERIFY = process.env.FO_VERIFY;
 
 export const metadata: Metadata = {
   title: 'BarBudget — build your home bar on a budget',
@@ -23,11 +25,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: `(function(){try{var t=localStorage.getItem('theme');var m=window.matchMedia('(prefers-color-scheme: dark)').matches;if(t==='dark'||(!t&&m)){document.documentElement.classList.add('dark');}}catch(e){}})();`,
           }}
         />
+        {/* FlexOffers ownership verification (meta-tag method). */}
+        {FO_VERIFY ? <meta name="fo-verify" content={FO_VERIFY} /> : null}
+        {/* Google AdSense verification / ad serving. Rendered as a real <head>
+            script so the AdSense crawler reliably finds it on every page. */}
         {ADSENSE_CLIENT_ID ? (
-          <Script
-            id="adsbygoogle-init"
+          <script
             async
-            strategy="afterInteractive"
             src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT_ID}`}
             crossOrigin="anonymous"
           />

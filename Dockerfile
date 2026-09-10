@@ -16,6 +16,18 @@ COPY . .
 # Generate the Prisma client, then build the standalone Next.js server.
 RUN npx prisma generate
 ENV NEXT_TELEMETRY_DISABLED=1
+
+# NEXT_PUBLIC_* are inlined into the client bundle at build time, so they must be
+# present now (passed as build args from compose). AdSense publisher/slot IDs are
+# public, not secrets.
+ARG NEXT_PUBLIC_ADSENSE_CLIENT_ID=""
+ARG NEXT_PUBLIC_ADSENSE_SLOT_INFEED=""
+ARG NEXT_PUBLIC_ADSENSE_SLOT_SIDEBAR=""
+ARG NEXT_PUBLIC_ADSENSE_SLOT_CALCULATOR=""
+ENV NEXT_PUBLIC_ADSENSE_CLIENT_ID=$NEXT_PUBLIC_ADSENSE_CLIENT_ID \
+    NEXT_PUBLIC_ADSENSE_SLOT_INFEED=$NEXT_PUBLIC_ADSENSE_SLOT_INFEED \
+    NEXT_PUBLIC_ADSENSE_SLOT_SIDEBAR=$NEXT_PUBLIC_ADSENSE_SLOT_SIDEBAR \
+    NEXT_PUBLIC_ADSENSE_SLOT_CALCULATOR=$NEXT_PUBLIC_ADSENSE_SLOT_CALCULATOR
 RUN npm run build
 
 # ── runner ────────────────────────────────────────────────────────────────────

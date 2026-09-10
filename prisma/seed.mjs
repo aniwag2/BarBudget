@@ -3,10 +3,27 @@
 // ingredient_cache, and the bootstrap admin user.
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { execFileSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { resolveDatabaseUrl } from '../scripts/db-url.mjs';
 
 // Ensure a correctly-encoded connection string before the client connects.
 process.env.DATABASE_URL = resolveDatabaseUrl();
+
+// Apply migrations first so seeding can't race the app container's startup
+// migrate (Prisma serializes concurrent deploys with an advisory lock, and
+// deploy is a no-op once applied). Skipped only if the CLI isn't present.
+function ensureMigrated() {
+  const cli = 'node_modules/prisma/build/index.js';
+  if (!existsSync(cli)) return;
+  try {
+    execFileSync('node', [cli, 'migrate', 'deploy'], { stdio: 'inherit', env: process.env });
+  } catch (e) {
+    console.error('[seed] migrate deploy failed:', e.message);
+    throw e;
+  }
+}
+
 const prisma = new PrismaClient();
 
 const CATEGORIES = [
@@ -165,6 +182,9 @@ function retailerLinks(bottleName, brand) {
 }
 
 async function main() {
+  console.log('[seed] Ensuring migrations are applied...');
+  ensureMigrated();
+
   console.log('[seed] Categories...');
   const catByName = {};
   for (const c of CATEGORIES) {
